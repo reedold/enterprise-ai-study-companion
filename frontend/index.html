@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Knowledge Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8h7M9 11.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </span>
+      <div>
+        <h1>Knowledge Engine</h1>
+        <p class="tagline">Grounded exam preparation from your own documents</p>
+      </div>
+    </div>
+    <span id="status" class="status status--pending" role="status">
+      <span class="dot"></span><span class="label">Connecting…</span>
+    </span>
+  </header>
+
+  <main class="layout">
+    <!-- ============ Left column: inputs ============ -->
+    <section class="column column--inputs">
+      <!-- Upload -->
+      <article class="card">
+        <header class="card__head">
+          <span class="step">1</span>
+          <div>
+            <h2>Upload material</h2>
+            <p class="muted">PDF course notes, manuals or policies. Scanned pages are OCR'd.</p>
+          </div>
+        </header>
+
+        <form id="upload-form" novalidate>
+          <label id="dropzone" class="dropzone" for="file-input">
+            <input id="file-input" type="file" accept="application/pdf,.pdf" hidden />
+            <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M12 15V4m0 0-4 4m4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span id="dropzone-text"><strong>Drop a PDF here</strong> or click to browse</span>
+            <span class="muted small">Max 25 MB</span>
+          </label>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="up-subject">Subject ID <span class="req">*</span></label>
+              <input id="up-subject" list="subject-list" placeholder="e.g. physics101" maxlength="128" required />
+            </div>
+            <div class="field">
+              <label for="up-topic">Topic <span class="muted">(optional)</span></label>
+              <input id="up-topic" placeholder="e.g. Mechanics" maxlength="256" />
+            </div>
+          </div>
+
+          <button id="upload-btn" class="btn btn--primary" type="submit" disabled>
+            <span class="btn__label">Upload &amp; index</span>
+          </button>
+          <div id="upload-progress" class="progress" hidden><div class="progress__bar"></div></div>
+          <p id="upload-msg" class="msg" hidden></p>
+        </form>
+      </article>
+
+      <!-- Generate -->
+      <article class="card">
+        <header class="card__head">
+          <span class="step">2</span>
+          <div>
+            <h2>Generate study material</h2>
+            <p class="muted">Answers come only from your uploaded documents.</p>
+          </div>
+        </header>
+
+        <form id="gen-form" novalidate>
+          <div class="field">
+            <label for="gen-query">Topic or question <span class="req">*</span></label>
+            <textarea id="gen-query" rows="3" maxlength="500" placeholder="e.g. Kinetic energy and conservation of momentum" required></textarea>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="gen-subject">Subject ID</label>
+              <input id="gen-subject" list="subject-list" placeholder="All subjects" maxlength="128" />
+            </div>
+            <div class="field">
+              <label for="gen-topk">Passages to retrieve</label>
+              <input id="gen-topk" type="number" min="1" max="20" value="8" />
+            </div>
+          </div>
+          <button id="gen-btn" class="btn btn--primary" type="submit">
+            <span class="btn__label">Generate</span>
+          </button>
+          <p id="gen-msg" class="msg" hidden></p>
+        </form>
+      </article>
+
+      <datalist id="subject-list"></datalist>
+    </section>
+
+    <!-- ============ Right column: results ============ -->
+    <section class="column column--results" aria-live="polite">
+      <div id="empty-state" class="empty">
+        <svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 10.5V16c0 1.1 2.7 3 6 3s6-1.9 6-3v-5.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        <h3>Your study pack will appear here</h3>
+        <p class="muted">Upload a PDF, then ask for a topic. You'll get a summary, key concepts, formulas and three self-check questions — each linked to the exact source page.</p>
+      </div>
+
+      <div id="loading" class="loading" hidden>
+        <div class="skeleton skeleton--title"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton skeleton--short"></div>
+        <p class="muted small" id="loading-text">Searching your documents…</p>
+      </div>
+
+      <div id="results" hidden>
+        <div id="not-grounded" class="notice" hidden>
+          <strong>Not covered by your documents.</strong>
+          <span id="not-grounded-text"></span>
+        </div>
+
+        <div id="grounded-content">
+          <div class="results__head">
+            <h2 id="res-title"></h2>
+            <span class="badge badge--ok">Grounded in sources</span>
+          </div>
+
+          <article class="card section">
+            <h3 class="section__title">Summary</h3>
+            <p id="res-summary" class="summary"></p>
+          </article>
+
+          <article class="card section" id="concepts-section">
+            <h3 class="section__title">Key concepts</h3>
+            <dl id="res-concepts" class="concepts"></dl>
+          </article>
+
+          <article class="card section" id="formulas-section">
+            <h3 class="section__title">Formulas</h3>
+            <div id="res-formulas" class="formulas"></div>
+          </article>
+
+          <article class="card section">
+            <div class="section__row">
+              <h3 class="section__title">Self-assessment</h3>
+              <button id="reveal-all" class="btn btn--ghost btn--sm" type="button">Reveal all</button>
+            </div>
+            <ol id="res-quiz" class="quiz"></ol>
+          </article>
+        </div>
+
+        <article class="card section" id="sources-section">
+          <h3 class="section__title">Sources</h3>
+          <ol id="res-sources" class="sources"></ol>
+          <p class="muted small" id="res-model"></p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
